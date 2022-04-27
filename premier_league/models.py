@@ -145,12 +145,13 @@ class Fan(models.Model):
 
 
 class MatchGame(models.Model):
+    id = models.IntegerField(primary_key=True)
     home_team_red_cards = models.CharField(max_length=100, blank=True, null=True)
     away_team_red_cards = models.CharField(max_length=45, blank=True, null=True)
     goals_home = models.CharField(max_length=45, blank=True, null=True)
     goals_away = models.CharField(max_length=45, blank=True, null=True)
     season = models.CharField(max_length=45, blank=True, null=True)
-    match_date = models.CharField(primary_key=True, max_length=45)
+    match_date = models.CharField(models.DO_NOTHING, max_length=45)
     home_team_possession = models.CharField(max_length=45, blank=True, null=True)
     away_team_possession = models.CharField(max_length=45, blank=True, null=True)
     home_team_shots = models.CharField(max_length=45, blank=True, null=True)
@@ -159,17 +160,19 @@ class MatchGame(models.Model):
     away_team_yellow_cards = models.CharField(max_length=45, blank=True, null=True)
     home_team_fouls = models.CharField(max_length=45, blank=True, null=True)
     away_team_fouls = models.CharField(max_length=45, blank=True, null=True)
-    home_team = models.CharField(max_length=45)
-    away_team = models.CharField(max_length=45)
+    home_team = models.CharField(models.DO_NOTHING, max_length=45)
+    away_team = models.CharField(models.DO_NOTHING, max_length=45)
 
-    class Meta:
+    class Meta():
         managed = False
         db_table = 'match_game'
         unique_together = (('match_date', 'home_team', 'away_team'),)
 
+    def __str__(self):
+        return self.match_date + ' | ' + self.home_team + ' | ' + self.away_team 
 
 class Player(models.Model):
-    player_name = models.CharField(primary_key=True, max_length=50, db_collation='utf8mb4_0900_ai_ci')
+    player_name = models.CharField(max_length=50, db_collation='utf8mb4_0900_ai_ci')
     player_position = models.CharField(max_length=50, db_collation='utf8mb4_0900_ai_ci', blank=True, null=True)
     height = models.CharField(max_length=50, db_collation='utf8mb4_0900_ai_ci', blank=True, null=True)
     nationality = models.CharField(max_length=50, db_collation='utf8mb4_0900_ai_ci', blank=True, null=True)
@@ -195,7 +198,7 @@ class PlayerClubSeason(models.Model):
 
 
 class Review(models.Model):
-    fan_username = models.OneToOneField(Fan, models.DO_NOTHING, db_column='fan_username', primary_key=True)
+    fan_username = models.OneToOneField(Fan, models.DO_NOTHING, db_column='fan_username')
     rating = models.IntegerField(blank=True, null=True)
     review_text = models.CharField(max_length=255, blank=True, null=True)
     match_date = models.CharField(max_length=45)
