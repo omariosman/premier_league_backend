@@ -7,8 +7,16 @@ from .models import *
 import json
 from rest_framework.parsers import JSONParser
 from django.http import JsonResponse
+from decimal import Decimal
 # Create your views here.
 
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return json.JSONEncoder.default(self, obj)
+
+# Usage:
 
 import mysql.connector
 cnx = mysql.connector.connect(user='root', 
@@ -20,11 +28,12 @@ cursor = cnx.cursor(buffered=True)
 def get_all_matches(request):
     cursor.execute("SELECT * FROM match_game")
     matches = cursor.fetchall()
-    return HttpResponse(json.dumps(matches), content_type="application/json")
+    return HttpResponse(json.dumps(matches, cls=DecimalEncoder), content_type="application/json")
 
 
 def insert_match_review(request):
     data = JSONParser().parse(request)
+    print("data: ", data)
     username = data["username"]
     rating = data["rating"]
     review_text = data["review"]
@@ -82,11 +91,29 @@ def get_players_with_nationality(request):
     data = JSONParser().parse(request)
     nationality = data["nationality"]
     nationality = data["nationality"]
-    query = """SELECT p.player_name, p.date_of_birth, p.nationality, pc.season, pc.club_name FROM premier_league.player as p join player_club_season as pc on pc.player_name = p.player_name and pc.date_of_birth = p.date_of_birth where nationality=%s;"""
+    query = """SELECT p.player_name, p.date_of_birth, p.nationality, pc.season, pc.club_name FROM premier_league.player as p join player_club_season_main as pc on pc.player_name = p.player_name and pc.date_of_birth = p.date_of_birth where nationality=%s;"""
     tuple1 = (nationality,)
     cursor.execute(query, tuple1)
     players_with_nationality = cursor.fetchall()
     return HttpResponse(json.dumps(players_with_nationality), content_type="application/json")
+
+
+def get_positions(request):
+    cursor.execute("SELECT distinct player_position FROM player")
+    positions = cursor.fetchall()
+    print(positions)
+    return HttpResponse(json.dumps(positions), content_type="application/json")
+
+def get_players_with_position(request):
+    data = JSONParser().parse(request)
+    pos = data["position"]
+    query = """SELECT * from player where player_position=%s;"""
+    tuple1 = (pos,)
+    cursor.execute(query, tuple1)
+    players_with_position = cursor.fetchall()
+    return HttpResponse(json.dumps(players_with_position), content_type="application/json")
+
+
 
 
 def get_clubs(request):
@@ -145,5 +172,139 @@ def get_stadium_info(request):
     return HttpResponse(json.dumps(stadium_info), content_type="application/json")
 
 
+def get_top_teams_by_matches_won(request):
+    cursor.execute("""
+    select home_team as team, count(*) as count from match_game where goals_home > goals_away
+    union
+    select away_team as team, count(*) as count from match_game where goals_home < goals_away
+    group by team
+    order by count DESC limit 10
+    """)
+    top_teams = cursor.fetchall()
+    return HttpResponse(json.dumps(top_teams), content_type="application/json")
 
 
+
+def get_top_teams_by_home_matches_won(request):
+    cursor.execute("""
+    select home_team as team, count(*) as count from match_game where goals_home > goals_away
+    group by home_team
+    order by count 
+    DESC limit 10;
+    """)
+    top_teams = cursor.fetchall()
+    return HttpResponse(json.dumps(top_teams), content_type="application/json")
+
+
+def get_top_teams_by_yellow_cards(request):
+    cursor.execute("""
+    select home_team as team, sum(home_team_yellow_cards) as cards_count from match_game
+    group by home_team
+    union
+    select away_team as team, sum(away_team_yellow_cards) as cards_count from match_game
+    group by away_team
+    order by cards_count
+    desc limit 10;
+    """)
+    top_teams = cursor.fetchall()
+    return HttpResponse(json.dumps(top_teams, cls=DecimalEncoder), content_type="application/json")
+
+def get_top_teams_by_shots(request):
+    cursor.execute("""
+    select home_team as team, sum(home_team_shots) as shots_count from match_game
+    group by home_team
+    union
+    select away_team as team, sum(away_team_shots) as fouls_count from match_game
+    group by away_team
+    order by shots_count
+    desc limit 10;
+    """)
+    top_teams = cursor.fetchall()
+    return HttpResponse(json.dumps(top_teams, cls=DecimalEncoder), content_type="application/json")
+
+
+
+
+def get_top_teams_by_fouls(request):
+    cursor.execute("""
+    select home_team as team, sum(home_team_fouls) as fouls_count from match_game
+    group by home_team
+    union
+    select away_team as team, sum(away_team_fouls) as fouls_count from match_game
+    group by away_team
+    order by fouls_count
+    desc limit 10;
+    """)
+    top_teams = cursor.fetchall()
+    return HttpResponse(json.dumps(top_teams,  cls=DecimalEncoder), content_type="application/json")
+
+
+def get_top_teams_by_season(request):
+    cursor.execute("""
+    select season, team , max(count) from
+    (
+    select season, home_team as team, count(*) as count from match_game where goals_home > goals_away
+    union
+    select season, away_team as team, count(*) as count from match_game where goals_home < goals_away
+    group by season, team
+    ) tb
+    group by season;
+    """)
+    top_teams = cursor.fetchall()
+    return HttpResponse(json.dumps(top_teams,  cls=DecimalEncoder), content_type="application/json")
+
+
+
+
+
+"""
+top 10 teams by yellow cards
+select home_team as team, sum(home_team_yellow_cards) as cards_count from match_game
+group by home_team
+union
+select away_team as team, sum(away_team_yellow_cards) as cards_count from match_game
+group by away_team
+order by cards_count
+desc limit 10;
+
+top 10 teams by fouls
+select home_team as team, sum(home_team_fouls) as fouls_count from match_game
+group by home_team
+union
+select away_team as team, sum(away_team_fouls) as fouls_count from match_game
+group by away_team
+order by fouls_count
+desc limit 10;
+
+top 10 teams by shots
+select home_team as team, sum(home_team_shots) as shots_count from match_game
+group by home_team
+union
+select away_team as team, sum(away_team_shots) as fouls_count from match_game
+group by away_team
+order by shots_count
+desc limit 10;
+
+top 10 teams by matches_won
+select home_team as team, count(*) as count from match_game where goals_home > goals_away
+union
+select away_team as team, count(*) as count from match_game where goals_home < goals_away
+group by team
+order by count DESC limit 10
+
+top 10 teams by home_matches_won
+select home_team as team, count(*) as count from match_game where goals_home > goals_away
+group by home_team
+order by count 
+DESC limit 10;
+
+show all the teams who won the most games by season
+select season, team , max(count) from
+(
+select season, home_team as team, count(*) as count from match_game where goals_home > goals_away
+union
+select season, away_team as team, count(*) as count from match_game where goals_home < goals_away
+group by season, team
+) tb
+group by season;
+"""
