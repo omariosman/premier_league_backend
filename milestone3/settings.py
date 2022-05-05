@@ -87,10 +87,10 @@ WSGI_APPLICATION = 'milestone3.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': "premier_league",
-        'USER': 'root',
-        'PASSWORD': '1234',
-        'HOST': '127.0.0.1',
+        'NAME': "prem_league",
+        'USER': 'osman123',
+        'PASSWORD': 'om@OS02301',
+        'HOST': 'db4free.net',
         'PORT': '3306',
     }
 }

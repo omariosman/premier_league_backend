@@ -19,8 +19,8 @@ class DecimalEncoder(json.JSONEncoder):
 # Usage:
 
 import mysql.connector
-cnx = mysql.connector.connect(user='root', 
-host='localhost', port='3306', password='1234', database="premier_league")
+cnx = mysql.connector.connect(user='admin', 
+host='database-1.c5knnxynfhmf.ca-central-1.rds.amazonaws.com', port='3306', password='osman123', database="premier_league")
 cursor = cnx.cursor(buffered=True)
 
 
@@ -177,8 +177,8 @@ def get_top_teams_by_matches_won(request):
     select home_team as team, count(*) as count from match_game where goals_home > goals_away
     union
     select away_team as team, count(*) as count from match_game where goals_home < goals_away
-    group by team
-    order by count DESC limit 10
+    group by team  
+    order by count, team DESC limit 10
     """)
     top_teams = cursor.fetchall()
     return HttpResponse(json.dumps(top_teams), content_type="application/json")
