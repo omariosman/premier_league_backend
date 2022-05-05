@@ -25,6 +25,7 @@ urlpatterns = [
     path('get_top_teams_by_shots/', views.get_top_teams_by_shots, name="get_top_teams_by_shots"),
     path('get_top_teams_by_fouls/', views.get_top_teams_by_fouls, name="get_top_teams_by_fouls"),
     path('get_top_teams_by_season/', views.get_top_teams_by_season, name="get_top_teams_by_season"),
+    path('all_users/', views.all_users, name="all_users"),
 
 
 

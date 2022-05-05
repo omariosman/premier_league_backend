@@ -16,7 +16,7 @@ class DecimalEncoder(json.JSONEncoder):
             return float(obj)
         return json.JSONEncoder.default(self, obj)
 
-# Usage:
+
 
 import mysql.connector
 cnx = mysql.connector.connect(user='admin', 
@@ -254,6 +254,11 @@ def get_top_teams_by_season(request):
     return HttpResponse(json.dumps(top_teams,  cls=DecimalEncoder), content_type="application/json")
 
 
+def all_users(request):
+    cursor.execute("SELECT distinct username FROM fan")
+    all_users = cursor.fetchall()
+    #print(all_users)
+    return HttpResponse(json.dumps(all_users), content_type="application/json")
 
 
 
