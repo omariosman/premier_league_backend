@@ -89,7 +89,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': "prem_league",
         'USER': 'osman123',
-        'PASSWORD': 'om@OS02301',
+        'PASSWORD': '',
         'HOST': 'db4free.net',
         'PORT': '3306',
     }
